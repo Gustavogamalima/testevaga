@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Micro Aplicativo</title>
+</head>
+<body>
+<div>
+    <button onclick="gravar()">Gravar</button>
+    <button onclick="ler()">Ler</button>
+</div>
+<div>
+    <input type="text" id="nomeInput" placeholder="Nome">
+    <button onclick="adicionarPessoa()">Incluir</button>
+</div>
+<div>
+    <table id="tabelaPessoas">
+        <thead>
+            <tr>
+                <th>Nome</th>
+                <th>Remover Pessoa</th>
+                <th>Adicionar Filho</th>
+            </tr>
+        </thead>
+        <tbody></tbody>
+    </table>
+</div>
+<div>
+    <table id="tabelaFilhos">
+        <thead>
+            <tr>
+                <th></th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody></tbody>
+    </table>
+</div>
+
+<textarea id="jsonOutput" rows="10" cols="50"></textarea>
+
+
+
+<script src="script.js"></script>
+<!-- <script id="outputData" type="application/json" src="output.json" defer></script> -->
+
+</body>
+</html>
