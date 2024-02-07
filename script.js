@@ -1,23 +1,15 @@
 let pessoas = [];
 
-// Função para adicionar uma pessoa à lista de pessoas
 function adicionarPessoa() {
     const nome = document.getElementById("nomeInput").value;
     if (nome) {
-        const id = pessoas.length + 1; // Gere um ID único para a pessoa
+        const id = pessoas.length + 1;
         pessoas.push({ id: id, nome: nome, filhos: [] });
-
-        // Adicione o console.log(pessoas) para verificar os IDs gerados
-        console.log(pessoas);
-
         renderizarTabela();
         atualizarJsonOutput();
     }
 }
 
-
-
-// Função para renderizar a tabela de pessoas e filhos
 function renderizarTabela() {
     const tbody = document.querySelector("#tabelaPessoas tbody");
     tbody.innerHTML = "";
@@ -37,17 +29,12 @@ function renderizarTabela() {
                 <td> - ${filho.nome}</td>
                 <td><button onclick="removerFilho(${filho.id})">Remover Filho</button></td>
                 <td></td>
-               
-
             `;
             tbody.appendChild(filhoTr);
         });
     });
 }
 
-
-
-// Função para adicionar um filho a uma pessoa
 function adicionarFilho(index) {
     const dialog = document.createElement("dialog");
     dialog.innerHTML = `
@@ -59,11 +46,10 @@ function adicionarFilho(index) {
     dialog.showModal();
 }
 
-// Função para confirmar a adição de um filho
 function confirmarFilho(index) {
     const nomeFilho = document.getElementById("nomeFilhoInput").value;
     if (nomeFilho) {
-        const idFilho = pessoas[index].filhos.length + 1; // Gere um ID único para o filho
+        const idFilho = pessoas[index].filhos.length + 1;
         pessoas[index].filhos.push({ id: idFilho, nome: nomeFilho });
         renderizarTabela();
         atualizarJsonOutput();
@@ -72,12 +58,10 @@ function confirmarFilho(index) {
     dialog.close();
     dialog.remove();
 }
-// Função para atualizar o conteúdo do textarea com o JSON atualizado
+
 function atualizarJsonOutput() {
     document.getElementById("jsonOutput").value = JSON.stringify(pessoas, null, 2);
 }
-
-
 
 function gravar() {
     const json = JSON.stringify(pessoas);
@@ -85,7 +69,7 @@ function gravar() {
         alert(mensagem);
     }
     
-    fetch('gravarDados.php', {
+    fetch('gravar.php', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json'
@@ -99,9 +83,8 @@ function gravar() {
         throw new Error('Erro ao gravar dados.');
     })
     .then(data => {
-        console.log(data);
         mostrarMensagem('Sucesso ao gravar dados.');
-        ler(); // Chama a função ler() após a gravação bem-sucedida
+        ler(false);
     })
     .catch(error => {
         console.error('Erro:', error);
@@ -109,12 +92,11 @@ function gravar() {
     });
 }
 
-
-
-
-function ler() {
-    function mostrarMensagem(mensagem) {
-        alert(mensagem);
+function ler(mostrarMensagem = true) {
+    function mostrarAlerta(mensagem) {
+        if (mostrarMensagem) {
+            alert(mensagem);
+        }
     }
     
     fetch('ler.php')
@@ -125,70 +107,78 @@ function ler() {
         throw new Error('Erro ao ler dados.');
     })
     .then(data => {
-        if (!data || Object.keys(data).length === 0) {
-            throw new Error('Resposta vazia ou malformada.');
+        if (!data || data.length === 0) {
+            mostrarAlerta('Sem dados na tabela.'); // Exibe a mensagem apenas se os dados estiverem vazios
+            return; // Sai da função sem executar o restante do código
         }
         pessoas = data;
         renderizarTabela();
         atualizarJsonOutput();
-        mostrarMensagem('Dados lidos com sucesso.');
+        if (mostrarMensagem) {
+            mostrarAlerta('Dados lidos com sucesso.');
+        }
     })
     .catch(error => {
         console.error('Erro:', error);
-        mostrarMensagem('Erro ao ler dados.');
+        if (mostrarMensagem) {
+            mostrarAlerta('Erro ao ler dados.');
+        }
     });
 }
-// Função para remover um filho pelo ID
-function removerFilho(id) {
-    const pessoaIndex = pessoas.findIndex(pessoa => pessoa.filhos.some(filho => filho.id === id));
-    if (pessoaIndex !== -1) {
-        const filhoIndex = pessoas[pessoaIndex].filhos.findIndex(filho => filho.id === id);
-        if (filhoIndex !== -1) {
-            pessoas[pessoaIndex].filhos.splice(filhoIndex, 1); // Remove o filho do array de filhos da pessoa
 
-            // Enviar solicitação DELETE para o servidor para remover o filho
-            fetch(`removerFilho.php?id=${id}`, {
-                method: 'DELETE'
-            })
-            .then(response => {
-                if (response.ok) {
-                    renderizarTabela();
-                    atualizarJsonOutput();
-                    return response.text();
-                }
-                throw new Error('Erro ao remover filho.');
-            })
-            .then(data => {
-                console.log(data); // Resposta do servidor
-            })
-            .catch(error => {
-                console.error('Erro:', error);
-                alert('Erro ao remover filho.');
-            });
+
+
+
+
+function removerFilho(id) {
+    const indexPessoa = pessoas.findIndex(pessoa => pessoa.filhos.some(filho => filho.id === id));
+    if (indexPessoa !== -1) {
+        const indexFilho = pessoas[indexPessoa].filhos.findIndex(filho => filho.id === id);
+        if (indexFilho !== -1) {
+            pessoas[indexPessoa].filhos.splice(indexFilho, 1); // Remove o filho da lista de filhos na pessoa
+            renderizarTabela();
+            atualizarJsonOutput();
+            return; // Sai da função se o filho foi encontrado e removido localmente
         }
     }
+
+    fetch(`removerFilho.php?id=${id}`, {
+        method: 'DELETE'
+    })
+    .then(response => {
+        if (response.ok) {
+            renderizarTabela();
+            atualizarJsonOutput();
+            ler(false); 
+            return response.text();
+        }
+        throw new Error('Erro ao remover filho.');
+    })
+    .catch(error => {
+        console.error('Erro:', error);
+        alert('Erro ao remover filho.');
+    });
 }
 
-// Função para remover uma pessoa pelo índice
+
 function removerPessoa(index) {
     if (index >= 0 && index < pessoas.length) {
         const pessoa = pessoas[index];
-        pessoas.splice(index, 1); // Remove a pessoa da lista de pessoas
+        pessoas.splice(index, 1);
 
-        // Enviar solicitação DELETE para o servidor para remover a pessoa
         fetch(`removerPessoa.php?id=${pessoa.id}`, {
             method: 'DELETE'
         })
         .then(response => {
-            if (response.ok) {
-                renderizarTabela();
-                atualizarJsonOutput();
-                return response.text();
+            if (!response.ok) {
+                throw new Error('Erro ao remover pessoa.');
             }
-            throw new Error('Erro ao remover pessoa.');
+            renderizarTabela();
+            atualizarJsonOutput();
+            return response.text();
         })
         .then(data => {
-            console.log(data); // Resposta do servidor
+            console.log(data);
         })
         .catch(error => {
             console.error('Erro:', error);
@@ -196,5 +186,3 @@ function removerPessoa(index) {
         });
     }
 }
-
-

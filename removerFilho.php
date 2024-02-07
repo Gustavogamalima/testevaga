@@ -1,37 +1,39 @@
 <?php
-// Verifica se a solicitação é um DELETE
-if ($_SERVER['REQUEST_METHOD'] === 'DELETE') {
-    // Verifica se o ID do filho foi enviado
-    if (isset($_GET['id'])) {
-        $idFilho = $_GET['id'];
+// Conexão com o banco de dados (substitua pelos seus dados de conexão)
+$servername = "localhost";
+$username = "root";
+$password = "";
+$dbname = "testevaga";
 
-        // Aqui você deve incluir o código para remover o filho do banco de dados MySQL.
-        // Substitua isso com sua lógica para excluir o filho com o ID fornecido.
+// Cria a conexão
+$conn = new mysqli($servername, $username, $password, $dbname);
 
-        // Exemplo de conexão com o banco de dados MySQL usando PDO
-        $dsn = 'mysql:host=localhost;dbname=testevaga';
-        $username = 'root';
-        $password = '';
-        
-        try {
-            $pdo = new PDO($dsn, $username, $password);
-            $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+// Verifica a conexão
+if ($conn->connect_error) {
+    die("Erro na conexão: " . $conn->connect_error);
+}
 
-            // Exemplo de uma consulta para excluir o filho com o ID fornecido
-            $stmt = $pdo->prepare("DELETE FROM filho WHERE id = :id");
-            $stmt->bindParam(':id', $idFilho, PDO::PARAM_INT);
-            $stmt->execute();
+// Verifica se o ID do filho foi enviado via método DELETE
+if ($_SERVER["REQUEST_METHOD"] === "DELETE") {
+    // Obtém o ID do filho a ser removido
+    $id_filho = $_GET['id'];
 
-            echo 'Filho removido com sucesso.';
-        } catch(PDOException $e) {
-            echo 'Erro ao remover filho: ' . $e->getMessage();
-        }
+    // Query para remover o filho do banco de dados
+    $sql = "DELETE FROM filho WHERE id = $id_filho";
+
+    if ($conn->query($sql) === TRUE) {
+        // Retorna uma resposta de sucesso ao cliente
+        echo "Filho removido com sucesso.";
     } else {
-        http_response_code(400); // Bad Request
-        echo 'ID do filho não fornecido.';
+        // Retorna uma mensagem de erro ao cliente, se houver algum problema com a consulta SQL
+        echo "Erro ao remover filho: " . $conn->error;
     }
 } else {
-    http_response_code(405); // Method Not Allowed
-    echo 'Método não permitido. Apenas solicitações DELETE são suportadas.';
+    // Se o método da requisição não for DELETE, retorna um erro
+    header("HTTP/1.1 405 Method Not Allowed");
+    echo "Método não permitido.";
 }
+
+// Fecha a conexão com o banco de dados
+$conn->close();
 ?>

@@ -1,13 +1,22 @@
 <?php
-include 'database.php';
+require 'database.php';
 
-if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    $json = file_get_contents('php://input');
-    $conexao = new Conectar();
-    $gravar = new Gravar($conexao->conexao, $json);
-    echo "Dados gravados com sucesso.";
+// Verifica se a solicitação é um POST
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    // Verifica se os dados foram enviados
+    $dadosJson = file_get_contents('php://input');
+    if ($dadosJson !== false) {
+        // Decodifica os dados JSON recebidos
+        $dados = json_decode($dadosJson, true);
+        
+        $gravarDados = new GravarDados();
+        echo $gravarDados->gravarPessoas($dados);
+    } else {
+        http_response_code(400); // Bad Request
+        echo 'Dados não foram recebidos.';
+    }
 } else {
-    header("HTTP/1.0 405 Method Not Allowed");
-    echo "Método não permitido.";
+    http_response_code(405); // Method Not Allowed
+    echo 'Método não permitido. Apenas solicitações POST são suportadas.';
 }
 ?>
